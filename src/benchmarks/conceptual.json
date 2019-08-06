@@ -1,0 +1,10 @@
+{
+  "allgather": {
+    "argc": 3,
+    "argv": [
+      "allgather",
+      "--msgsize",
+      "1024"
+    ]
+  }
+}

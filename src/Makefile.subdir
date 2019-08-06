@@ -1,0 +1,9 @@
+include_HEADERS = src/cowg_util.h 
+
+src_libcowg_la_SOURCES = src/cowg_util.c	\
+						src/benchmarks/conc-allgather.c
+
+dist_data_DATA = src/benchmarks/conceptual.json
+
+
+				

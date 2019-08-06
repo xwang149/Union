@@ -1,0 +1,15 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+datarootdir=@exec_prefix@/share
+conceptual_libs=@CONCEPTUAL_LIBS@
+conceptual_cflags=@CONCEPTUAL_CFLAGS@
+
+Name: cowg
+Description: coNCePTuaL - CODES Online Workload Generator
+Version: 0.1
+URL: git@github.com:xwang149/cowg.git
+Requires: 
+Libs: -L${libdir} -lcowg ${conceptual_libs}
+Cflags: -I${includedir} ${conceptual_cflags}
