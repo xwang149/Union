@@ -30,9 +30,10 @@ cd ../
 ```
 
 ### Installing COWG
+```bash
 cd cowg
 ./prepare.sh
 ./configure --with-boost=/path/to/boost/install --with-conceptual=/path/to/conceptual/install --prefix=/path/to/cowg/install CC=mpicc CXX=mpicxx CFLAGS='-g -O0' CXXFLAGS='-g -O0'
 make
 make install
-
+```
