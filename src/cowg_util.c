@@ -8,12 +8,16 @@
 
 /* list of available benchmarks begin */
 extern struct cowg_conceptual_bench allgather_bench;
+extern struct cowg_conceptual_bench latency_bench;
+extern struct cowg_conceptual_bench cosmoflow_bench;
 /* list of available benchmarks end */
 
 static struct cowg_conceptual_bench const * bench_array_default[] =
 {
     /* default benchmarks begin */
     &allgather_bench,
+    &latency_bench,
+    &cosmoflow_bench,
     /* default benchmarks end */
     NULL
 };

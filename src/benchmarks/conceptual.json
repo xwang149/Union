@@ -6,5 +6,27 @@
       "--msgsize",
       "1024"
     ]
-  }
+  },
+  "latency": {
+    "argc": 5,
+    "argv": [
+      "latency",
+      "--reps",
+      "10",
+      "--maxbytes",
+      "1M"
+    ]
+  },
+  "cosmoflow": {
+    "argc": 7,
+    "argv": [
+      "cosmoflow",
+      "--msgsize",
+      "7379200",
+      "--reps",
+      "10",
+      "--compute",
+      "129"
+    ]
+  }  
 }

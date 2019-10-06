@@ -22,7 +22,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src \
 
 AM_LDFLAGS = $(BOOST_LDFLAGS) 
 
-AM_CFLAGS =
+AM_CFLAGS = 
 
 AM_LIBS =
 

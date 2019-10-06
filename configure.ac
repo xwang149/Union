@@ -33,14 +33,6 @@ AC_REQUIRE_CPP
 
 AC_CHECK_SIZEOF([long int])
 
-dnl
-dnl Verify pkg-config
-dnl
-PKG_PROG_PKG_CONFIG
-if test "x$PKG_CONFIG" == "x"; then
-       AC_MSG_ERROR([Could not find pkg-config utility!])
-fi
-
 #check for Conceptual
 AC_ARG_WITH([conceptual],[AS_HELP_STRING([--with-conceptual@<:@=DIR@:>@],
                         [location of Conceptual installation])])
@@ -55,6 +47,16 @@ if test "x${with_conceptual}" != "x" ; then
 else
   AM_CONDITIONAL(USE_CONC, false)
 fi
+
+
+dnl
+dnl Verify pkg-config
+dnl
+PKG_PROG_PKG_CONFIG
+if test "x$PKG_CONFIG" == "x"; then
+       AC_MSG_ERROR([Could not find pkg-config utility!])
+fi
+
 
 
 AC_CONFIG_FILES([Makefile maint/cowg.pc])
