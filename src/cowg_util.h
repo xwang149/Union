@@ -47,7 +47,7 @@ int cowg_conc_bench_load(
 void COWG_MPI_Comm_size (MPI_Comm comm, int *size);
 void COWG_MPI_Comm_rank( MPI_Comm comm, int *rank );
 void COWG_MPI_Finalize();
-void COWG_Compute(long cycle_count);
+void COWG_Compute(long ns);
 void COWG_MPI_Send(const void *buf, 
             int count, 
             MPI_Datatype datatype, 
