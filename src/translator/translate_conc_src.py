@@ -64,24 +64,24 @@ def manipulate_mpi_ops(inLines, program_name):
             elif 'MPI_Errhandler_' in line:     # error handling ignored
                 inLines[idx] = "//"+line
             elif 'mpiresult = MPI_Finalize();' in line:
-                inLines[idx] = "CODES_MPI_Finalize();"
+                inLines[idx] = "UNION_MPI_Finalize();"
                 inLines[idx+2] = "exitcode = 0;"
             elif 'MPI_Comm_get_attr' in line:
                 inLines[idx] = "//"+line
             else:
                 for ops in MPI_OPS:
                     if ops in line:
-                        inLines[idx] = line.replace(ops,"CODES_"+ops)
+                        inLines[idx] = line.replace(ops,"UNION_"+ops)
 
 def adding_struct(inLines, program_name):
     new_struct = [ '/* fill in function pointers for this method */' ,
-                   'struct codes_conceptual_bench '+program_name+'_bench = ' , 
+                   'struct union_conceptual_bench '+program_name+'_bench = ' , 
                    '{' ,
                    '.program_name = "'+program_name+'",' ,
                    '.conceptual_main = '+program_name+'_main,' ,
                    '};' ]
 
-    codes_include = '#include "codes/codes-conc-addon.h"'
+    codes_include = '#include "union_util.h"'
     for idx, line in enumerate(inLines):
         if "* Include files *" in line:
             inLines.insert(idx-1, codes_include)
@@ -117,49 +117,49 @@ def translate_conc_to_codes(filepath, codespath):
     adding_struct(inLines, program_name)
 
     # output program file
-    with open(codespath+"src/workload/conceputal-skeleton-apps/conc-"+program_name+".c","w+") as outFile:
+    with open("./conc-"+program_name+".c","w+") as outFile:
         outFile.writelines(["%s\n" % item for item in inLines])
+#
+#     # modify interface file
+#     program_struct = "extern struct codes_conceptual_bench "+program_name+"_bench;\n"
+#     program_struct_idx=[]
+#     program_definition = "    &"+program_name+"_bench,\n"
+#     program_definition_idx=[]
+#     with open(codespath+"src/workload/codes-conc-addon.c","r+") as header:
+#         hls = header.readlines()
+#         for idx, line in enumerate(hls):
+#             if '/* list of available benchmarks begin */' in line:
+#                 program_struct_idx.append(idx+1)
+#             elif '/* list of available benchmarks end */' in line:
+#                 program_struct_idx.append(idx)
+#         insert_if_not_exist(program_struct, program_struct_idx, hls)
 
-    # modify interface file
-    program_struct = "extern struct codes_conceptual_bench "+program_name+"_bench;\n"
-    program_struct_idx=[]
-    program_definition = "    &"+program_name+"_bench,\n"
-    program_definition_idx=[]
-    with open(codespath+"src/workload/codes-conc-addon.c","r+") as header:
-        hls = header.readlines()
-        for idx, line in enumerate(hls):
-            if '/* list of available benchmarks begin */' in line:
-                program_struct_idx.append(idx+1)
-            elif '/* list of available benchmarks end */' in line:
-                program_struct_idx.append(idx)
-        insert_if_not_exist(program_struct, program_struct_idx, hls)
+#         for idx, line in enumerate(hls):
+#             if '/* default benchmarks begin */' in line:
+#                 program_definition_idx.append(idx+1)
+#             elif '/* default benchmarks end */' in line:
+#                 program_definition_idx.append(idx)
+#         insert_if_not_exist(program_definition, program_definition_idx, hls)
 
-        for idx, line in enumerate(hls):
-            if '/* default benchmarks begin */' in line:
-                program_definition_idx.append(idx+1)
-            elif '/* default benchmarks end */' in line:
-                program_definition_idx.append(idx)
-        insert_if_not_exist(program_definition, program_definition_idx, hls)
+#         header.seek(0)
+#         header.writelines(hls)
 
-        header.seek(0)
-        header.writelines(hls)
-
-    # modify makefile
-    program_compile = "src_libcodes_la_SOURCES += src/workload/conceputal-skeleton-apps/conc-"+program_name+".c\n"
-    program_compile_idx = []
-    with open(codespath+"Makefile.am","r+") as makefile:
-        mfls = makefile.readlines()
-        for idx, line in enumerate(mfls):
-            if "CONCEPTUAL_LIBS" in line:
-                program_compile_idx.append(idx+1)
-                break
-        for i in range(program_compile_idx[0], len(mfls)):
-            if 'endif' in mfls[i]:
-                program_compile_idx.append(i)
-                break
-        insert_if_not_exist(program_compile, program_compile_idx, mfls)        
-        makefile.seek(0)
-        makefile.writelines(mfls)        
+#     # modify makefile
+#     program_compile = "src_libcodes_la_SOURCES += src/workload/conceputal-skeleton-apps/conc-"+program_name+".c\n"
+#     program_compile_idx = []
+#     with open(codespath+"Makefile.am","r+") as makefile:
+#         mfls = makefile.readlines()
+#         for idx, line in enumerate(mfls):
+#             if "CONCEPTUAL_LIBS" in line:
+#                 program_compile_idx.append(idx+1)
+#                 break
+#         for i in range(program_compile_idx[0], len(mfls)):
+#             if 'endif' in mfls[i]:
+#                 program_compile_idx.append(i)
+#                 break
+#         insert_if_not_exist(program_compile, program_compile_idx, mfls)        
+#         makefile.seek(0)
+#         makefile.writelines(mfls)        
 
 
 if __name__ == "__main__":
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         if benchfile.lower().endswith('.ncptl'):
             cfile = benchfile.replace('.ncptl','.c')
             cfile = cfile.replace("-","")
-            os.system(sys.argv[3]+' --backend=c_mpi --no-compile '+benchfile+' --output '+cfile)
+            os.system(sys.argv[3]+' --backend=c_union --no-compile '+benchfile+' --output '+cfile)
             print "adding bench file: %s" % cfile
             translate_conc_to_codes(sys.argv[1]+cfile, sys.argv[2])
 

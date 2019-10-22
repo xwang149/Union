@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([cowg], [0.1], [],[],[]) 
+AC_INIT([union], [0.1], [],[],[]) 
 AC_CONFIG_MACRO_DIRS([m4])
 LT_INIT
 
@@ -59,7 +59,7 @@ fi
 
 
 
-AC_CONFIG_FILES([Makefile maint/cowg.pc])
+AC_CONFIG_FILES([Makefile maint/union.pc])
 AC_OUTPUT
 
 

@@ -60,10 +60,10 @@ import codegen_c_generic
 class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
 
     def __init__(self, options=None):
-        "Initialize the C + COWG code generation module."
+        "Initialize the C + Union code generation module."
         codegen_c_generic.NCPTL_CodeGen.__init__(self, options)
-        self.backend_name = "c_cowg"
-        self.backend_desc = "C + COWG"
+        self.backend_name = "c_union"
+        self.backend_desc = "C + Union"
 
         # Determine the set of build parameters to use.
         self.set_param("CC", "replace",
@@ -79,15 +79,15 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
                        self.get_param("MPILIBS", ""))
 
         # Process any command-line options targeting the backend itself.
-        self.send_function = "COWG_MPI_Send"
-        self.isend_function = "COWG_MPI_Isend"
+        self.send_function = "UNION_MPI_Send"
+        self.isend_function = "UNION_MPI_Isend"
         self.reduce_operation = "MPI_SUM"
         for arg in range(0, len(options)):
             if options[arg] == "--ssend":
                 # Use MPI_Send() unless the --ssend option is given,
                 # in which case we use MPI_Ssend().
-                self.send_function = "COWG_MPI_Ssend"
-                self.isend_function = "COWG_MPI_Issend"
+                self.send_function = "UNION_MPI_Ssend"
+                self.isend_function = "UNION_MPI_Issend"
             elif options[arg][:9] == "--reduce=":
                 # Reduce using MPI_SUM unless an alternative is named.
                 self.reduce_operation = options[arg][9:]
@@ -95,11 +95,11 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
                 # Output a help message.
                 self.cmdline_options.extend([
                     ("--ssend",
-                     """Use COWG_MPI_Ssend() for point-to-point
+                     """Use UNION_MPI_Ssend() for point-to-point
                                   communication instead of MPI_Send()"""),
                     ("--reduce=<string>",
                      """Specify an MPI reduce operator to use for
-                                  COWG_MPI_Reduce() and COWG_MPI_Allreduce()
+                                  UNION_MPI_Reduce() and UNION_MPI_Allreduce()
                                   [default: MPI_SUM]""")])
                 self.show_help()
                 raise SystemExit, 0
@@ -110,9 +110,9 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
     # ----------- #
 
     def code_specify_include_files_POST(self, localvars):
-        "Specify extra header files needed by the c_cowg backend."
+        "Specify extra header files needed by the c_union backend."
         return [
-            "#include \"cowg_util.h\"",
+            "#include \"union_util.h\"",
             "#include <mpi.h>",
             "#include <stdarg.h>"]
 
@@ -192,7 +192,7 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
         "Declare variables needed by code_define_functions_INIT_COMM_1."
         newvars = []
         self.code_declare_var(type="int", name="num_tasks",
-                              comment="int version of var_num_tasks needed by COWG_MPI_Comm_size()",
+                              comment="int version of var_num_tasks needed by UNION_MPI_Comm_size()",
                               stack=newvars)
         self.code_declare_var(type="char *", name="procflags",
                               comment="Array of 1s representing an all-task MPI communicator",
@@ -224,8 +224,8 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
         return [
             "(void) MPI_Errhandler_create ((MPI_Handler_function *)handle_MPI_error, &mpi_error_handler);",
             "(void) MPI_Errhandler_set (MPI_COMM_WORLD, mpi_error_handler);",
-            "(void) COWG_MPI_Comm_rank(MPI_COMM_WORLD, &physrank);",
-            "(void) COWG_MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);",
+            "(void) UNION_MPI_Comm_rank(MPI_COMM_WORLD, &physrank);",
+            "(void) UNION_MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);",
             "var_num_tasks = (ncptl_int) num_tasks;",
             "(void) MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &attr_val, &attr_flag);",
             "mpi_tag_ub = (ncptl_int) (attr_flag ? *(int *)attr_val : 32767);"]
@@ -341,7 +341,7 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
                               comment="Version of random_seed with int type",
                               stack=bcastcode)
         self.pushmany([
-            "(void) COWG_MPI_Bcast ((void *)&rndseed_int, 1, MPI_INT, 0, MPI_COMM_WORLD);",
+            "(void) UNION_MPI_Bcast ((void *)&rndseed_int, 1, MPI_INT, 0, MPI_COMM_WORLD);",
             "random_seed = (ncptl_int) rndseed_int;",
             "}"],
                       stack=bcastcode)
@@ -349,7 +349,7 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
 
     def code_def_init_uuid_BCAST(self, locals):
         "Broadcast logfile_uuid to all tasks."
-        return ["(void) COWG_MPI_Bcast ((void *)logfile_uuid, 37, MPI_CHAR, 0, MPI_COMM_WORLD);"]
+        return ["(void) UNION_MPI_Bcast ((void *)logfile_uuid, 37, MPI_CHAR, 0, MPI_COMM_WORLD);"]
 
     def code_def_mark_used_POST(self, locals):
         "Indicate that rank_in_MPI_communicator() is not an unused function."
@@ -396,7 +396,7 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
         "Finish up cleanly."
         return [
             "mpiresult = 0;",
-            "COWG_MPI_Finalize();",
+            "UNION_MPI_Finalize();",
             "mpi_is_running = 0;",
             "exitcode = mpiresult!=MPI_SUCCESS;"]
 
@@ -506,7 +506,7 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
     def code_def_procev_recv_BODY(self, localvars):
         "Receive a message from a given channel (blocking)."
         return [
-            "(void) COWG_MPI_Recv (NULL,",
+            "(void) UNION_MPI_Recv (NULL,",
             "(int)thisev->s.recv.size, MPI_BYTE,",
             "(int)thisev->s.recv.source, (int)thisev->s.recv.tag,",
             "MPI_COMM_WORLD, &status);"]
@@ -522,7 +522,7 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
     def code_def_procev_arecv_BODY(self, localvars):
         "Perform an asynchronous receive."
         return [
-            "(void) COWG_MPI_Irecv (NULL,",
+            "(void) UNION_MPI_Irecv (NULL,",
             "(int)thisev->s.recv.size, MPI_BYTE,",
             "(int)thisev->s.recv.source, (int)thisev->s.recv.tag,",
             "MPI_COMM_WORLD, thisev->s.recv.handle);"]
@@ -530,12 +530,12 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
     def code_def_procev_wait_BODY_SENDS(self, localvars):
         "Retry all of the sends that blocked."
         return [
-            "(void) COWG_MPI_Waitall ((int)thisev->s.wait.numsends, sendrequests, sendstatuses);"]
+            "(void) UNION_MPI_Waitall ((int)thisev->s.wait.numsends, sendrequests, sendstatuses);"]
 
     def code_def_procev_wait_BODY_RECVS(self, localvars):
         "Retry all of the receives that blocked."
         return [
-            "(void) COWG_MPI_Waitall ((int)thisev->s.wait.numrecvs, recvrequests, recvstatuses);"]
+            "(void) UNION_MPI_Waitall ((int)thisev->s.wait.numrecvs, recvrequests, recvstatuses);"]
 
 
     # ------------------------ #
@@ -614,7 +614,7 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
 
     def code_def_procev_sync_BODY(self, localvars):
         "Synchronize a set of tasks."
-        return ["(void) COWG_MPI_Barrier (thisev->s.sync.communicator);"]
+        return ["(void) UNION_MPI_Barrier (thisev->s.sync.communicator);"]
 
     def n_for_count_SYNC_ALL(self, localvars):
         "Prepare to synchronize all of the tasks in the job."
@@ -622,12 +622,12 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
 
     def code_synchronize_all_BODY(self, localvars):
         "Immediately synchronize all of the tasks in the job."
-        return ["(void) COWG_MPI_Barrier (MPI_COMM_WORLD);"]
+        return ["(void) UNION_MPI_Barrier (MPI_COMM_WORLD);"]
 
     def code_def_procev_etime_REDUCE_MIN(self, localvars):
         "Find the global minimum of the elapsedtime variable."
         return [
-            "(void) COWG_MPI_Allreduce (&elapsedtime, &minelapsedtime,",
+            "(void) UNION_MPI_Allreduce (&elapsedtime, &minelapsedtime,",
             "1, MPI_LONG_LONG_INT, MPI_MIN, MPI_COMM_WORLD);"]
 
     def code_declare_datatypes_PRE(self, localvars):
@@ -965,7 +965,7 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
         self.pushmany([
                 " /* MPI_Alltoall() includes sends to self.  Adjust sndnum and rcvnum appropriately. */",
                 "if (mpi_func == CONC_MCAST_MPI_ALLTOALL) {",
-                "COWG_MPI_Comm_size (subcomm, &sndnum);",
+                "UNION_MPI_Comm_size (subcomm, &sndnum);",
                 "rcvnum = sndnum;",
                 "}",
                 ""],
@@ -1053,17 +1053,17 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
             "switch (%s.mpi_func) {" % struct,
             "case CONC_MCAST_MPI_BCAST:",
             " /* One to many */",
-            "(void) COWG_MPI_Bcast (NULL, %s.size, MPI_BYTE," % struct,
+            "(void) UNION_MPI_Bcast (NULL, %s.size, MPI_BYTE," % struct,
             "%s.root, %s.communicator);" % (struct, struct),
             "break;",
             "case CONC_MCAST_MPI_ALLTOALL:",
             " /* Many to many, same to each */",
-            "(void) COWG_MPI_Alltoall (NULL, %s.sndvol[0], MPI_BYTE," % struct,
+            "(void) UNION_MPI_Alltoall (NULL, %s.sndvol[0], MPI_BYTE," % struct,
             "NULL, %s.rcvvol[0], MPI_BYTE, %s.communicator);" % (struct, struct),
             "break;",
             "case CONC_MCAST_MPI_ALLTOALLV:",
             " /* Many to many, different to each */",
-            "(void) COWG_MPI_Alltoallv (NULL, %s.sndvol, %s.snddisp, MPI_BYTE," % (struct, struct),
+            "(void) UNION_MPI_Alltoallv (NULL, %s.sndvol, %s.snddisp, MPI_BYTE," % (struct, struct),
             "NULL, %s.rcvvol, %s.rcvdisp, MPI_BYTE, %s.communicator);" % (struct, struct, struct),
             "break;",
             "default:",
@@ -1275,25 +1275,25 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
             "switch (%s.reducetype) {" % struct,
             "case 0:",
             " /* Reduce to a single task. */",
-            "(void) COWG_MPI_Reduce (NULL, NULL, %s.numitems," % struct,
+            "(void) UNION_MPI_Reduce (NULL, NULL, %s.numitems," % struct,
             "%s.datatype, REDUCE_OPERATION, %s.reduceroot, %s.sendcomm);" %
             (struct, struct, struct),
             "break;",
             "",
             "case 1:",
             " /* Reduce from a set of tasks to the same set of tasks. */",
-            "(void) COWG_MPI_Allreduce (NULL, NULL, %s.numitems," % struct,
+            "(void) UNION_MPI_Allreduce (NULL, NULL, %s.numitems," % struct,
             "%s.datatype, REDUCE_OPERATION, %s.sendcomm);" % (struct, struct),
             "break;",
             "",
             "case 2:",
             " /* Reduce from one set of tasks to a different set. */",
             "if (%s.sending)" % struct,
-            "(void) COWG_MPI_Reduce (NULL, NULL, %s.numitems," % struct,
+            "(void) UNION_MPI_Reduce (NULL, NULL, %s.numitems," % struct,
             "%s.datatype, REDUCE_OPERATION, %s.reduceroot, %s.sendcomm);" %
             (struct, struct, struct),
             "if (%s.receiving)" % struct,
-            "(void) COWG_MPI_Bcast (NULL, %s.numitems," % struct,
+            "(void) UNION_MPI_Bcast (NULL, %s.numitems," % struct,
             "%s.datatype, %s.bcastroot, %s.recvcomm);" % ((struct,)*3),
             "break;",
             "",
@@ -1961,10 +1961,10 @@ class NCPTL_CodeGen(codegen_c_generic.NCPTL_CodeGen):
             "return conc_finalize();",
             "}"])
 
-        # Fill COWG structure
+        # Fill UNION structure
         self.pushmany([
             "/* fill in function pointers for this method */",
-            "struct cowg_conceptual_bench %s_bench = " % progname,
+            "struct union_conceptual_bench %s_bench = " % progname,
             "{",
             ".program_name = \"%s\"," % progname,
             ".conceptual_main = %s_main," % progname,

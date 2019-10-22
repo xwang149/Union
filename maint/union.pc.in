@@ -6,10 +6,10 @@ datarootdir=@exec_prefix@/share
 conceptual_libs=@CONCEPTUAL_LIBS@
 conceptual_cflags=@CONCEPTUAL_CFLAGS@
 
-Name: cowg
-Description: coNCePTuaL - CODES Online Workload Generator
+Name: Union
+Description: Workload Manager for Integration of Conceptual as An Online Workload for CODES
 Version: 0.1
-URL: git@github.com:xwang149/cowg.git
+URL: git@github.com:xwang149/Union.git
 Requires: 
-Libs: -L${libdir} -lcowg ${conceptual_libs}
+Libs: -L${libdir} -lunion ${conceptual_libs}
 Cflags: -I${includedir} ${conceptual_cflags}

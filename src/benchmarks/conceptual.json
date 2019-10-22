@@ -1,18 +1,10 @@
 {
-  "allgather": {
-    "argc": 3,
-    "argv": [
-      "allgather",
-      "--msgsize",
-      "1024"
-    ]
-  },
   "latency": {
     "argc": 5,
     "argv": [
       "latency",
       "--reps",
-      "10",
+      "100",
       "--maxbytes",
       "1M"
     ]

@@ -19,23 +19,23 @@
  *   Task 0 multicasts a numwords*num_tasks word message from buffer 0 to all other tasks.
  *   Task 0 multicasts a numwords*num_tasks word message from buffer 1 to all other tasks.
  *   
- *   # Measure the performance of COWG_MPI_Allreduce().
+ *   # Measure the performance of UNION_MPI_Allreduce().
  *   Task 0 resets its counters then
  *   for reps repetitions {
  *       all tasks COMPUTES FOR computetime MILLISECONDS then
  *       all tasks backend execute "
- *           COWG_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)" and numwords and ",
+ *           UNION_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)" and numwords and ",
  *                   MPI_INT, MPI_SUM, MPI_COMM_WORLD);
  *           " then
  *       all tasks backend execute "
- *           COWG_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)" and numwords and ",
+ *           UNION_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)" and numwords and ",
  *                   MPI_INT, MPI_SUM, MPI_COMM_WORLD);
  *           "
  *   } then
  *   task 0 logs elapsed_usecs/1000 as "Elapse time (ms)".
  **********************************************************************/
 
-#include "cowg_util.h"
+#include "union_util.h"
 /*****************
  * Include files *
  *****************/
@@ -404,7 +404,7 @@ conc_dummy_var.vp = (void *) comm;   /* Prevent the compiler from complaining th
 va_end (args);
 }
 
-/* Perform the equivalent of COWG_MPI_Comm_rank() for an arbitrary process. */
+/* Perform the equivalent of UNION_MPI_Comm_rank() for an arbitrary process. */
 static int rank_in_MPI_communicator (MPI_Comm subcomm, int global_rank)
 {
   MPI_Group world_group;   /* Group associated with MPI_COMM_WORLD */
@@ -521,16 +521,16 @@ char *sourcecode[] = {
 "Task 0 multicasts a numwords*num_tasks word message from buffer 0 to all other tasks.",
 "Task 0 multicasts a numwords*num_tasks word message from buffer 1 to all other tasks.",
 "",
-"# Measure the performance of COWG_MPI_Allreduce().",
+"# Measure the performance of UNION_MPI_Allreduce().",
 "Task 0 resets its counters then",
 "for reps repetitions {",
 "    all tasks COMPUTES FOR computetime MILLISECONDS then",
 "    all tasks backend execute \"",
-"        COWG_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)\" and numwords and \",",
+"        UNION_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)\" and numwords and \",",
 "                MPI_INT, MPI_SUM, MPI_COMM_WORLD);",
 "        \" then",
 "    all tasks backend execute \"",
-"        COWG_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)\" and numwords and \",",
+"        UNION_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)\" and numwords and \",",
 "                MPI_INT, MPI_SUM, MPI_COMM_WORLD);",
 "        \"",
 "} then",
@@ -539,7 +539,7 @@ NULL
 };
 
  /* Variables specific to the c_mpi backend */
-int num_tasks;   /* int version of var_num_tasks needed by COWG_MPI_Comm_size() */
+int num_tasks;   /* int version of var_num_tasks needed by UNION_MPI_Comm_size() */
 char * procflags;   /* Array of 1s representing an all-task MPI communicator */
 MPI_Comm comm_world = MPI_COMM_WORLD;   /* Copy of MPI_COMM_WORLD that we can take the address of */
 void * attr_val;   /* Pointed to the value of MPI_TAG_UB */
@@ -571,15 +571,15 @@ if (!help_only)
  /* Initialize the communication routines needed by the c_mpi backend. */
 //(void) MPI_Errhandler_create ((MPI_Handler_function *)handle_MPI_error, &mpi_error_handler);
 //(void) MPI_Errhandler_set (MPI_COMM_WORLD, mpi_error_handler);
-(void) COWG_MPI_Comm_rank(MPI_COMM_WORLD, &physrank);
-(void) COWG_MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+(void) UNION_MPI_Comm_rank(MPI_COMM_WORLD, &physrank);
+(void) UNION_MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
 var_num_tasks = (ncptl_int) num_tasks;
 //(void) MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &attr_val, &attr_flag);
 mpi_tag_ub = (ncptl_int) (attr_flag ? *(int *)attr_val : 32767);
 
  /* Generate and broadcast a UUID. */
 //logfile_uuid = ncptl_log_generate_uuid();
-//(void) COWG_MPI_Bcast ((void *)logfile_uuid, 37, MPI_CHAR, 0, MPI_COMM_WORLD);
+//(void) UNION_MPI_Bcast ((void *)logfile_uuid, 37, MPI_CHAR, 0, MPI_COMM_WORLD);
 
  /* Plug variables and default values into the NCPTL_CMDLINE structure. */
 arguments[0].variable = (CMDLINE_VALUE *) &logfiletmpl;
@@ -605,7 +605,7 @@ procmap = ncptl_allocate_task_map (var_num_tasks);
 virtrank = ncptl_physical_to_virtual (procmap, physrank);
 
  /* Perform initializations specific to the c_mpi backend. */
-//ncptl_log_add_comment ("MPI send routines", "MPI_Send() and COWG_MPI_Isend()");
+//ncptl_log_add_comment ("MPI send routines", "MPI_Send() and UNION_MPI_Isend()");
 //ncptl_log_add_comment ("MPI reduction operation", REDUCE_OPERATION_NAME);
 //sprintf (log_key_str, "[0, %" NICS "]", mpi_tag_ub);
 //ncptl_log_add_comment ("MPI tag range", log_key_str);
@@ -678,12 +678,12 @@ procflags[ttasknum] = 1;
 subcomm = define_MPI_communicator(procflags);
 
  /* Determine if all participants are sending and receiving the same number
-  * and volume of messages.  If so, then we can use the faster COWG_MPI_Alltoall()
-  * function for the multicast instead of the slower COWG_MPI_Alltoallv(). */
+  * and volume of messages.  If so, then we can use the faster UNION_MPI_Alltoall()
+  * function for the multicast instead of the slower UNION_MPI_Alltoallv(). */
 {
 ncptl_int msgtally = -1;   /* Messages sent or received by any participant */
 ncptl_int i;
-mpi_func = CONC_MCAST_MPI_ALLTOALL;  /* Use MPI_Alltoall() unless we require COWG_MPI_Alltoallv(). */
+mpi_func = CONC_MCAST_MPI_ALLTOALL;  /* Use MPI_Alltoall() unless we require UNION_MPI_Alltoallv(). */
 for (i=0; i<var_num_tasks; i++) {
 stasknum = (int) ncptl_virtual_to_physical(procmap, i);
 if (procflags[stasknum]) {
@@ -704,7 +704,7 @@ int groupsize = 0;   /* Number of MPI ranks represented by subcomm */
 ncptl_int ivar_b_loop;
 
 if (numsenders == 1) {
- /* As a special case, use COWG_MPI_Bcast() if there's a single sender. */
+ /* As a special case, use UNION_MPI_Bcast() if there's a single sender. */
 conc_mcast_tallies[CONC_MCAST_MPI_BCAST]++;
 CONC_EVENT *thisev = conc_allocate_event (EV_MCAST);
 thisev->s.mcast.source = ncptl_virtual_to_physical (procmap, 0LL);
@@ -734,7 +734,7 @@ ncptl_fatal ("The c_mpi backend does not support nonzero tags in MULTICAST state
 }
 else {
  /* We have more than one sender.
-  * Allocate memory for COWG_MPI_Alltoallv() to use. */
+  * Allocate memory for UNION_MPI_Alltoallv() to use. */
 for (ivar_b_loop=0; ivar_b_loop<var_num_tasks; ivar_b_loop++)
 groupsize += procflags[ivar_b_loop];
 sndvol = (int *) ncptl_malloc(groupsize*sizeof(int), 0);
@@ -773,9 +773,9 @@ rcvnum++;
 }
 }
 
- /* COWG_MPI_Alltoall() includes sends to self.  Adjust sndnum and rcvnum appropriately. */
+ /* UNION_MPI_Alltoall() includes sends to self.  Adjust sndnum and rcvnum appropriately. */
 if (mpi_func == CONC_MCAST_MPI_ALLTOALL) {
-COWG_MPI_Comm_size (subcomm, &sndnum);
+UNION_MPI_Comm_size (subcomm, &sndnum);
 rcvnum = sndnum;
 }
 
@@ -861,12 +861,12 @@ procflags[ttasknum] = 1;
 subcomm = define_MPI_communicator(procflags);
 
  /* Determine if all participants are sending and receiving the same number
-  * and volume of messages.  If so, then we can use the faster COWG_MPI_Alltoall()
-  * function for the multicast instead of the slower COWG_MPI_Alltoallv(). */
+  * and volume of messages.  If so, then we can use the faster UNION_MPI_Alltoall()
+  * function for the multicast instead of the slower UNION_MPI_Alltoallv(). */
 {
 ncptl_int msgtally = -1;   /* Messages sent or received by any participant */
 ncptl_int i;
-mpi_func = CONC_MCAST_MPI_ALLTOALL;  /* Use MPI_Alltoall() unless we require COWG_MPI_Alltoallv(). */
+mpi_func = CONC_MCAST_MPI_ALLTOALL;  /* Use MPI_Alltoall() unless we require UNION_MPI_Alltoallv(). */
 for (i=0; i<var_num_tasks; i++) {
 stasknum = (int) ncptl_virtual_to_physical(procmap, i);
 if (procflags[stasknum]) {
@@ -887,7 +887,7 @@ int groupsize = 0;   /* Number of MPI ranks represented by subcomm */
 ncptl_int ivar_f_loop;
 
 if (numsenders == 1) {
- /* As a special case, use COWG_MPI_Bcast() if there's a single sender. */
+ /* As a special case, use UNION_MPI_Bcast() if there's a single sender. */
 conc_mcast_tallies[CONC_MCAST_MPI_BCAST]++;
 CONC_EVENT *thisev = conc_allocate_event (EV_MCAST);
 thisev->s.mcast.source = ncptl_virtual_to_physical (procmap, 0LL);
@@ -917,7 +917,7 @@ ncptl_fatal ("The c_mpi backend does not support nonzero tags in MULTICAST state
 }
 else {
  /* We have more than one sender.
-  * Allocate memory for COWG_MPI_Alltoallv() to use. */
+  * Allocate memory for UNION_MPI_Alltoallv() to use. */
 for (ivar_f_loop=0; ivar_f_loop<var_num_tasks; ivar_f_loop++)
 groupsize += procflags[ivar_f_loop];
 sndvol = (int *) ncptl_malloc(groupsize*sizeof(int), 0);
@@ -956,9 +956,9 @@ rcvnum++;
 }
 }
 
- /* COWG_MPI_Alltoall() includes sends to self.  Adjust sndnum and rcvnum appropriately. */
+ /* UNION_MPI_Alltoall() includes sends to self.  Adjust sndnum and rcvnum appropriately. */
 if (mpi_func == CONC_MCAST_MPI_ALLTOALL) {
-COWG_MPI_Comm_size (subcomm, &sndnum);
+UNION_MPI_Comm_size (subcomm, &sndnum);
 rcvnum = sndnum;
 }
 
@@ -1036,7 +1036,7 @@ thisev->s.delay.microseconds *= (uint64_t) 1000LL;
 thisev->s.delay.spin0sleep1 = 0;
 }
  /* THEN... */
- /* ALL TASKS BACKEND EXECUTES ['"\\n        COWG_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)"', 'var_numwords', '",\\n                MPI_INT, MPI_SUM, MPI_COMM_WORLD);\\n        "'] */
+ /* ALL TASKS BACKEND EXECUTES ['"\\n        UNION_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)"', 'var_numwords', '",\\n                MPI_INT, MPI_SUM, MPI_COMM_WORLD);\\n        "'] */
 {   /* ALL TASKS */
  /* The current coNCePTuaL statement applies to our task. */
 CONC_EVENT *thisev = conc_allocate_event (EV_CODE);
@@ -1045,7 +1045,7 @@ thisev->s.code.procmap = NULL;
 thisev->s.code.var_numwords = var_numwords;
 }
  /* THEN... */
- /* ALL TASKS BACKEND EXECUTES ['"\\n        COWG_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)"', 'var_numwords', '",\\n                MPI_INT, MPI_SUM, MPI_COMM_WORLD);\\n        "'] */
+ /* ALL TASKS BACKEND EXECUTES ['"\\n        UNION_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)"', 'var_numwords', '",\\n                MPI_INT, MPI_SUM, MPI_COMM_WORLD);\\n        "'] */
 {   /* ALL TASKS */
  /* The current coNCePTuaL statement applies to our task. */
 CONC_EVENT *thisev = conc_allocate_event (EV_CODE);
@@ -1143,17 +1143,17 @@ case EV_MCAST:
 switch (thisev->s.mcast.mpi_func) {
 case CONC_MCAST_MPI_BCAST:
  /* One to many */
-(void) COWG_MPI_Bcast (CONC_GETBUFPTR(mcast), thisev->s.mcast.size, MPI_BYTE,
+(void) UNION_MPI_Bcast (CONC_GETBUFPTR(mcast), thisev->s.mcast.size, MPI_BYTE,
 thisev->s.mcast.root, thisev->s.mcast.communicator);
 break;
 case CONC_MCAST_MPI_ALLTOALL:
  /* Many to many, same to each */
-(void) COWG_MPI_Alltoall (CONC_GETBUFPTR(mcast), thisev->s.mcast.sndvol[0], MPI_BYTE,
+(void) UNION_MPI_Alltoall (CONC_GETBUFPTR(mcast), thisev->s.mcast.sndvol[0], MPI_BYTE,
 (void *)((char *)thisev->s.mcast.buffer2 + thisev->s.mcast.bufferofs2), thisev->s.mcast.rcvvol[0], MPI_BYTE, thisev->s.mcast.communicator);
 break;
 case CONC_MCAST_MPI_ALLTOALLV:
  /* Many to many, different to each */
-(void) COWG_MPI_Alltoallv (CONC_GETBUFPTR(mcast), thisev->s.mcast.sndvol, thisev->s.mcast.snddisp, MPI_BYTE,
+(void) UNION_MPI_Alltoallv (CONC_GETBUFPTR(mcast), thisev->s.mcast.sndvol, thisev->s.mcast.snddisp, MPI_BYTE,
 (void *)((char *)thisev->s.mcast.buffer2 + thisev->s.mcast.bufferofs2), thisev->s.mcast.rcvvol, thisev->s.mcast.rcvdisp, MPI_BYTE, thisev->s.mcast.communicator);
 break;
 default:
@@ -1194,20 +1194,20 @@ case EV_CODE:
  /* Execute an arbitrary piece of code. */
 switch (thisev->s.code.number) {
 case 0:
- /* ALL TASKS BACKEND EXECUTES ['"\\n        COWG_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)"', 'var_numwords', '",\\n                MPI_INT, MPI_SUM, MPI_COMM_WORLD);\\n        "'] */
+ /* ALL TASKS BACKEND EXECUTES ['"\\n        UNION_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)"', 'var_numwords', '",\\n                MPI_INT, MPI_SUM, MPI_COMM_WORLD);\\n        "'] */
 {
 
-        COWG_MPI_Allreduce((ncptl_get_message_buffer ((ncptl_int)(0))), (ncptl_get_message_buffer ((ncptl_int)(1))), (int) (double)thisev->s.code.var_numwords ,
+        UNION_MPI_Allreduce((ncptl_get_message_buffer ((ncptl_int)(0))), (ncptl_get_message_buffer ((ncptl_int)(1))), (int) (double)thisev->s.code.var_numwords ,
                 MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         
 }
 break;
 
 case 1:
- /* ALL TASKS BACKEND EXECUTES ['"\\n        COWG_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)"', 'var_numwords', '",\\n                MPI_INT, MPI_SUM, MPI_COMM_WORLD);\\n        "'] */
+ /* ALL TASKS BACKEND EXECUTES ['"\\n        UNION_MPI_Allreduce([MESSAGE BUFFER 0], [MESSAGE BUFFER 1], (int)"', 'var_numwords', '",\\n                MPI_INT, MPI_SUM, MPI_COMM_WORLD);\\n        "'] */
 {
 
-        COWG_MPI_Allreduce((ncptl_get_message_buffer ((ncptl_int)(0))), (ncptl_get_message_buffer ((ncptl_int)(1))), (int) (double)thisev->s.code.var_numwords ,
+        UNION_MPI_Allreduce((ncptl_get_message_buffer ((ncptl_int)(0))), (ncptl_get_message_buffer ((ncptl_int)(1))), (int) (double)thisev->s.code.var_numwords ,
                 MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         
 }
@@ -1251,19 +1251,19 @@ int exitcode = 0;   /* Program exit code (to pass to exit()) */
 //log_key_str[0] = '\0';
 //if (conc_mcast_tallies[CONC_MCAST_MPI_BCAST] > 0) {
 //char onefuncstr[50];
-//sprintf (onefuncstr, "%sCOWG_MPI_Bcast()*%" NICS,
+//sprintf (onefuncstr, "%sUNION_MPI_Bcast()*%" NICS,
 //log_key_str[0] == '\0' ? "" : " ", conc_mcast_tallies[CONC_MCAST_MPI_BCAST]);
 //strcat (log_key_str, onefuncstr);
 //}
 //if (conc_mcast_tallies[CONC_MCAST_MPI_ALLTOALL] > 0) {
 //char onefuncstr[50];
-//sprintf (onefuncstr, "%sCOWG_MPI_Alltoall()*%" NICS,
+//sprintf (onefuncstr, "%sUNION_MPI_Alltoall()*%" NICS,
 //log_key_str[0] == '\0' ? "" : " ", conc_mcast_tallies[CONC_MCAST_MPI_ALLTOALL]);
 //strcat (log_key_str, onefuncstr);
 //}
 //if (conc_mcast_tallies[CONC_MCAST_MPI_ALLTOALLV] > 0) {
 //char onefuncstr[50];
-//sprintf (onefuncstr, "%sCOWG_MPI_Alltoallv()*%" NICS,
+//sprintf (onefuncstr, "%sUNION_MPI_Alltoallv()*%" NICS,
 //log_key_str[0] == '\0' ? "" : " ", conc_mcast_tallies[CONC_MCAST_MPI_ALLTOALLV]);
 //strcat (log_key_str, onefuncstr);
 //}
@@ -1281,7 +1281,7 @@ int exitcode = 0;   /* Program exit code (to pass to exit()) */
 //ncptl_finalize();
 
  /* Finalization code specific to the c_mpi backend */
-COWG_MPI_Finalize();
+UNION_MPI_Finalize();
 mpi_is_running = 0;
 exitcode = 0;
 
@@ -1318,7 +1318,7 @@ return conc_finalize();
 }
 
 /* fill in function pointers for this method */
-struct cowg_conceptual_bench cosmoflow_bench = 
+struct union_conceptual_bench cosmoflow_bench = 
 {
 .program_name = "cosmoflow",
 .conceptual_main = cosmoflow_main,

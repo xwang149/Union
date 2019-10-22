@@ -4,18 +4,16 @@
  *
  */
 #include <assert.h>
-#include <cowg_util.h>
+#include <union_util.h>
 
 /* list of available benchmarks begin */
-extern struct cowg_conceptual_bench allgather_bench;
-extern struct cowg_conceptual_bench latency_bench;
-extern struct cowg_conceptual_bench cosmoflow_bench;
+extern struct union_conceptual_bench latency_bench;
+extern struct union_conceptual_bench cosmoflow_bench;
 /* list of available benchmarks end */
 
-static struct cowg_conceptual_bench const * bench_array_default[] =
+static struct union_conceptual_bench const * bench_array_default[] =
 {
     /* default benchmarks begin */
-    &allgather_bench,
     &latency_bench,
     &cosmoflow_bench,
     /* default benchmarks end */
@@ -25,7 +23,7 @@ static struct cowg_conceptual_bench const * bench_array_default[] =
 // once initialized, adding a bench generator is an error
 static int is_bench_init = 0;
 static int num_user_benchs = 0;
-static struct cowg_conceptual_bench const ** bench_array = NULL;
+static struct union_conceptual_bench const ** bench_array = NULL;
 
 // only call this once
 static void init_bench_methods(void)
@@ -49,7 +47,7 @@ static void init_bench_methods(void)
 }
 
 
-int cowg_conc_bench_load(
+int union_conc_bench_load(
         const char *program,
         int argc, 
         char *argv[])
@@ -63,7 +61,7 @@ int cowg_conc_bench_load(
     {
         if(strcmp(bench_array[i]->program_name, program) == 0)
         {
-            /* load appropriate workload generator */
+            /* load appropriate skeleton program */
             ret = bench_array[i]->conceptual_main(argc, argv);
             if(ret < 0)
             {
@@ -76,12 +74,12 @@ int cowg_conc_bench_load(
     return(-1);
 }
 
-void cowg_conc_add_bench(struct cowg_conceptual_bench const * bench)
+void union_conc_add_bench(struct union_conceptual_bench const * bench)
 {
     static int bench_array_cap = 10;
     if (is_bench_init)
         fprintf(stderr,
-                "adding a conceptual benchmark method after initialization is forbidden");
+            "adding a conceptual benchmark method after initialization is forbidden");
     else if (bench_array == NULL){
         bench_array = malloc(bench_array_cap * sizeof(*bench_array));
         assert(bench_array);

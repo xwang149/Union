@@ -30,10 +30,10 @@ LDADD = ${CONCEPTUAL_LIBS}
 
 AM_CXXFLAGS = $(AM_CFLAGS)
 
-lib_LTLIBRARIES = src/libcowg.la
+lib_LTLIBRARIES = src/libunion.la
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = maint/cowg.pc
+pkgconfig_DATA = maint/union.pc
 
 include Make.rules
 

@@ -1,5 +1,5 @@
-# COWG
-coNCePTuaL - CODES Online Workload Generator
+# Uion
+Workload Manager for Integration of Conceptual as An Online Workload for CODES
 
 
 # Installation
@@ -29,11 +29,12 @@ cd boost_1_68_0
 cd ../
 ```
 
-### Installing COWG
+### Installing Union    
 ```bash
-cd cowg
+cd union
 ./prepare.sh
-./configure --with-boost=/path/to/boost/install --with-conceptual=/path/to/conceptual/install --prefix=/path/to/cowg/install CC=mpicc CXX=mpicxx CFLAGS='-g -O0' CXXFLAGS='-g -O0'
+./configure --with-boost=/path/to/boost/install --with-conceptual=/path/to/conceptual/install --prefix=/path/to/union/install CC=mpicc CXX=mpicxx CFLAGS='-g -O0' CXXFLAGS='-g -O0'
 make
 make install
 ```
+
